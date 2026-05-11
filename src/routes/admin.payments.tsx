@@ -115,13 +115,13 @@ function AdminPayments() {
   const update = useMutation({
     mutationFn: async () => {
       if (!editing) throw new Error("No payment selected");
-      const payload: Record<string, any> = {
+      const payload = {
         amount: editForm.amount,
         mode: editForm.mode,
         transaction_id: editForm.transaction_id || null,
+        ...(editForm.payment_date ? { payment_date: editForm.payment_date } : {}),
       };
-      if (editForm.payment_date) payload.payment_date = editForm.payment_date;
-      const { error } = await supabase.from("payments").update(payload).eq("id", editing.id);
+      const { error } = await (supabase as any).from("payments").update(payload).eq("id", editing.id);
       if (error) throw error;
     },
     onSuccess: () => {
