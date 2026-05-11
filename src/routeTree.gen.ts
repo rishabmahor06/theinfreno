@@ -27,6 +27,7 @@ import { Route as MemberProfileRouteImport } from './routes/member.profile'
 import { Route as MemberFeesRouteImport } from './routes/member.fees'
 import { Route as MemberDietRouteImport } from './routes/member.diet'
 import { Route as MemberAttendanceRouteImport } from './routes/member.attendance'
+import { Route as AdminSeriesRouteImport } from './routes/admin.series'
 import { Route as AdminPaymentsRouteImport } from './routes/admin.payments'
 import { Route as AdminMembersRouteImport } from './routes/admin.members'
 import { Route as AdminAlertsRouteImport } from './routes/admin.alerts'
@@ -121,6 +122,11 @@ const MemberAttendanceRoute = MemberAttendanceRouteImport.update({
   path: '/attendance',
   getParentRoute: () => MemberRoute,
 } as any)
+const AdminSeriesRoute = AdminSeriesRouteImport.update({
+  id: '/series',
+  path: '/series',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminPaymentsRoute = AdminPaymentsRouteImport.update({
   id: '/payments',
   path: '/payments',
@@ -152,6 +158,7 @@ export interface FileRoutesByFullPath {
   '/admin/alerts': typeof AdminAlertsRoute
   '/admin/members': typeof AdminMembersRoute
   '/admin/payments': typeof AdminPaymentsRoute
+  '/admin/series': typeof AdminSeriesRoute
   '/member/attendance': typeof MemberAttendanceRoute
   '/member/diet': typeof MemberDietRoute
   '/member/fees': typeof MemberFeesRoute
@@ -173,6 +180,7 @@ export interface FileRoutesByTo {
   '/admin/alerts': typeof AdminAlertsRoute
   '/admin/members': typeof AdminMembersRoute
   '/admin/payments': typeof AdminPaymentsRoute
+  '/admin/series': typeof AdminSeriesRoute
   '/member/attendance': typeof MemberAttendanceRoute
   '/member/diet': typeof MemberDietRoute
   '/member/fees': typeof MemberFeesRoute
@@ -197,6 +205,7 @@ export interface FileRoutesById {
   '/admin/alerts': typeof AdminAlertsRoute
   '/admin/members': typeof AdminMembersRoute
   '/admin/payments': typeof AdminPaymentsRoute
+  '/admin/series': typeof AdminSeriesRoute
   '/member/attendance': typeof MemberAttendanceRoute
   '/member/diet': typeof MemberDietRoute
   '/member/fees': typeof MemberFeesRoute
@@ -222,6 +231,7 @@ export interface FileRouteTypes {
     | '/admin/alerts'
     | '/admin/members'
     | '/admin/payments'
+    | '/admin/series'
     | '/member/attendance'
     | '/member/diet'
     | '/member/fees'
@@ -243,6 +253,7 @@ export interface FileRouteTypes {
     | '/admin/alerts'
     | '/admin/members'
     | '/admin/payments'
+    | '/admin/series'
     | '/member/attendance'
     | '/member/diet'
     | '/member/fees'
@@ -266,6 +277,7 @@ export interface FileRouteTypes {
     | '/admin/alerts'
     | '/admin/members'
     | '/admin/payments'
+    | '/admin/series'
     | '/member/attendance'
     | '/member/diet'
     | '/member/fees'
@@ -417,6 +429,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MemberAttendanceRouteImport
       parentRoute: typeof MemberRoute
     }
+    '/admin/series': {
+      id: '/admin/series'
+      path: '/series'
+      fullPath: '/admin/series'
+      preLoaderRoute: typeof AdminSeriesRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/payments': {
       id: '/admin/payments'
       path: '/payments'
@@ -445,6 +464,7 @@ interface AdminRouteChildren {
   AdminAlertsRoute: typeof AdminAlertsRoute
   AdminMembersRoute: typeof AdminMembersRoute
   AdminPaymentsRoute: typeof AdminPaymentsRoute
+  AdminSeriesRoute: typeof AdminSeriesRoute
   AdminIndexRoute: typeof AdminIndexRoute
 }
 
@@ -452,6 +472,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminAlertsRoute: AdminAlertsRoute,
   AdminMembersRoute: AdminMembersRoute,
   AdminPaymentsRoute: AdminPaymentsRoute,
+  AdminSeriesRoute: AdminSeriesRoute,
   AdminIndexRoute: AdminIndexRoute,
 }
 

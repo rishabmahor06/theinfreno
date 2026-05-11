@@ -28,7 +28,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Check, ChevronsUpDown, Mail, Plus, Search } from "lucide-react";
+import { Check, ChevronsUpDown, Mail, Pencil, Plus, Search, Trash2 } from "lucide-react";
 import { AvatarThumb } from "@/components/avatar-thumb";
 import { toast } from "sonner";
 import { format } from "date-fns";
@@ -50,6 +50,13 @@ function AdminPayments() {
   const [open, setOpen] = useState(false);
   const [memberPickerOpen, setMemberPickerOpen] = useState(false);
   const [q, setQ] = useState("");
+  const [editing, setEditing] = useState<any | null>(null);
+  const [editForm, setEditForm] = useState({
+    amount: 0,
+    mode: "cash",
+    transaction_id: "",
+    payment_date: "",
+  });
   const [form, setForm] = useState({
     member_id: "",
     amount: 1500,
@@ -104,6 +111,48 @@ function AdminPayments() {
     },
     onError: (e: any) => toast.error(e.message),
   });
+
+  const update = useMutation({
+    mutationFn: async () => {
+      if (!editing) throw new Error("No payment selected");
+      const payload: Record<string, any> = {
+        amount: editForm.amount,
+        mode: editForm.mode,
+        transaction_id: editForm.transaction_id || null,
+      };
+      if (editForm.payment_date) payload.payment_date = editForm.payment_date;
+      const { error } = await supabase.from("payments").update(payload).eq("id", editing.id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Payment updated");
+      setEditing(null);
+      qc.invalidateQueries({ queryKey: ["all-payments"] });
+    },
+    onError: (e: any) => toast.error(e.message),
+  });
+
+  const remove = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("payments").delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Payment deleted");
+      qc.invalidateQueries({ queryKey: ["all-payments"] });
+    },
+    onError: (e: any) => toast.error(e.message),
+  });
+
+  const openEdit = (p: any) => {
+    setEditing(p);
+    setEditForm({
+      amount: Number(p.amount) || 0,
+      mode: p.mode ?? "cash",
+      transaction_id: p.transaction_id ?? "",
+      payment_date: p.payment_date ? String(p.payment_date).slice(0, 10) : "",
+    });
+  };
 
   const downloadInvoice = (p: any) => {
     const m = members.find((x) => x.member_id === p.member_id);
@@ -278,9 +327,23 @@ function AdminPayments() {
                     {p.next_due_date ? format(new Date(p.next_due_date), "PP") : "—"}
                   </td>
                   <td className="px-4 py-3 text-right">
-                    <Button size="sm" variant="ghost" onClick={() => downloadInvoice(p)}>
-                      <Mail className="mr-1 h-4 w-4" /> Invoice
-                    </Button>
+                    <div className="flex justify-end gap-1">
+                      <Button size="sm" variant="ghost" onClick={() => downloadInvoice(p)}>
+                        <Mail className="mr-1 h-4 w-4" /> Invoice
+                      </Button>
+                      <Button size="sm" variant="ghost" onClick={() => openEdit(p)}>
+                        <Pencil className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => {
+                          if (confirm(`Delete payment ${p.invoice_no}?`)) remove.mutate(p.id);
+                        }}
+                      >
+                        <Trash2 className="h-4 w-4 text-destructive" />
+                      </Button>
+                    </div>
                   </td>
                 </tr>
               );
@@ -295,6 +358,55 @@ function AdminPayments() {
           </tbody>
         </table>
       </div>
+
+      <Dialog open={!!editing} onOpenChange={(o) => { if (!o) setEditing(null); }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit Payment {editing?.invoice_no ? `— ${editing.invoice_no}` : ""}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label>Amount</Label>
+              <Input
+                type="number"
+                value={editForm.amount}
+                onChange={(e) => setEditForm({ ...editForm, amount: +e.target.value })}
+              />
+            </div>
+            <div>
+              <Label>Mode</Label>
+              <Select value={editForm.mode} onValueChange={(v) => setEditForm({ ...editForm, mode: v })}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="cash">Cash</SelectItem>
+                  <SelectItem value="upi">UPI</SelectItem>
+                  <SelectItem value="card">Card</SelectItem>
+                  <SelectItem value="bank">Bank</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label>Payment Date</Label>
+              <Input
+                type="date"
+                value={editForm.payment_date}
+                onChange={(e) => setEditForm({ ...editForm, payment_date: e.target.value })}
+              />
+            </div>
+            <div>
+              <Label>Transaction ID (optional)</Label>
+              <Input
+                value={editForm.transaction_id}
+                onChange={(e) => setEditForm({ ...editForm, transaction_id: e.target.value })}
+              />
+            </div>
+          </div>
+          <div className="flex justify-end gap-2">
+            <Button variant="ghost" onClick={() => setEditing(null)}>Cancel</Button>
+            <Button disabled={update.isPending} onClick={() => update.mutate()}>Save</Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

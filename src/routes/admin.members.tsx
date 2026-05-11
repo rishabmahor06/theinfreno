@@ -67,22 +67,43 @@ function normalizeEmail(value: string) {
 async function generateNextMemberId(
   admin: Awaited<ReturnType<typeof getServiceRoleClient>>,
 ): Promise<string> {
-  const prefix = process.env.MEMBER_ID_PREFIX ?? "IF-";
-  const start = Number(process.env.MEMBER_ID_START ?? "1001") || 1001;
+  // Always use the active member_id_series configured in /admin/series.
+  const { data: activeSeries, error: activeErr } = await (admin as any)
+    .from("member_id_series")
+    .select("id, prefix, next_number, padding")
+    .eq("is_active", true)
+    .order("updated_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
 
-  const { data, error } = await admin
-    .from("profiles")
-    .select("member_id")
-    .like("member_id", `${prefix}%`);
-  if (error) throw error;
-
-  let max = start - 1;
-  for (const row of data ?? []) {
-    const tail = (row.member_id ?? "").slice(prefix.length);
-    const n = Number(tail);
-    if (Number.isFinite(n) && n > max) max = n;
+  if (activeErr) {
+    console.error("[member_id_series] lookup failed:", activeErr);
+    throw new Error(
+      `Member ID series lookup failed: ${activeErr.message}. Did you run the member_id_series migration?`,
+    );
   }
-  return `${prefix}${max + 1}`;
+
+  if (!activeSeries) {
+    throw new Error(
+      "No active member ID series. Go to /admin/series, create a series and mark it Active.",
+    );
+  }
+
+  const num = activeSeries.next_number as number;
+  const padding = (activeSeries.padding as number) ?? 0;
+  const prefix = activeSeries.prefix as string;
+  const id = padding > 0 ? `${prefix}${String(num).padStart(padding, "0")}` : `${prefix}${num}`;
+
+  const { error: bumpErr } = await (admin as any)
+    .from("member_id_series")
+    .update({ next_number: num + 1, updated_at: new Date().toISOString() })
+    .eq("id", activeSeries.id);
+  if (bumpErr) {
+    console.error("[member_id_series] bump failed:", bumpErr);
+    throw new Error(`Failed to advance series: ${bumpErr.message}`);
+  }
+
+  return id;
 }
 
 async function getServiceRoleClient() {

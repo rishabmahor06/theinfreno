@@ -1,7 +1,7 @@
 import { Link, Outlet, createFileRoute, redirect, useNavigate } from "@tanstack/react-router";
 import { createServerFn } from "@tanstack/react-start";
 import { useState } from "react";
-import { Activity, Bell, CreditCard, Dumbbell, LogOut, Menu, Moon, Sun, Users } from "lucide-react";
+import { Activity, Bell, CreditCard, Dumbbell, Layers, LogOut, Menu, Moon, Sun, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { useTheme } from "@/components/theme-provider";
@@ -166,6 +166,7 @@ const NAV = [
   { to: "/admin", label: "Dashboard", icon: Activity, exact: true },
   { to: "/admin/members", label: "Members", icon: Users },
   { to: "/admin/payments", label: "Payments", icon: CreditCard },
+  { to: "/admin/series", label: "Series", icon: Layers },
   { to: "/admin/alerts", label: "Alerts", icon: Bell },
 ] as const;
 
