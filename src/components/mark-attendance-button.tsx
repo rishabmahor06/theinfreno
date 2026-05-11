@@ -43,10 +43,12 @@ export function MarkAttendanceButton() {
     mutationFn: async () => {
       if (!profile) throw new Error("Profile loading...");
       if (overdue) throw new Error("Fee overdue. Please contact admin.");
+      const now = new Date();
       const { error } = await supabase.from("attendance").insert({
         user_id: profile.id,
         member_id: profile.member_id,
-        date: new Date().toISOString().slice(0, 10),
+        date: now.toISOString().slice(0, 10),
+        created_at: now.toISOString(),
       });
       if (error) throw error;
     },
@@ -98,7 +100,8 @@ export function MarkAttendanceButton() {
               <span className="text-muted-foreground">Mobile:</span> {profile.phone ?? "—"}
             </p>
             <p>
-              <span className="text-muted-foreground">Date:</span> {format(new Date(), "PPP")}
+              <span className="text-muted-foreground">Date &amp; Time:</span>{" "}
+              {format(new Date(), "PPP p")}
             </p>
           </div>
         )}

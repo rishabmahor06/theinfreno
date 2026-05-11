@@ -22,6 +22,7 @@ function AttendancePage() {
       if (error) throw error;
       return data;
     },
+    staleTime: 30_000,
   });
 
   return (
@@ -31,24 +32,29 @@ function AttendancePage() {
         {/* <MarkAttendanceButton /> */}
       </div>
 
-      <div className="overflow-hidden rounded-xl border border-border bg-card">
-        <table className="w-full text-sm">
+      <div className="overflow-x-auto rounded-xl border border-border bg-card">
+        <table className="w-full min-w-150 text-sm">
           <thead className="bg-muted">
             <tr>
               <th className="px-4 py-3 text-left">Date</th>
+              <th className="px-4 py-3 text-left">Time</th>
               <th className="px-4 py-3 text-left">Member ID</th>
             </tr>
           </thead>
           <tbody>
-            {list.map((a: any) => (
-              <tr key={a.id} className="border-t border-border">
-                <td className="px-4 py-3">{format(new Date(a.date), "PPP")}</td>
-                <td className="px-4 py-3 font-mono">{a.member_id}</td>
-              </tr>
-            ))}
+            {list.map((a: any) => {
+              const ts = a.created_at ? new Date(a.created_at) : new Date(a.date);
+              return (
+                <tr key={a.id} className="border-t border-border">
+                  <td className="px-4 py-3">{format(ts, "PPP")}</td>
+                  <td className="px-4 py-3 font-mono">{format(ts, "p")}</td>
+                  <td className="px-4 py-3 font-mono">{a.member_id}</td>
+                </tr>
+              );
+            })}
             {list.length === 0 && (
               <tr>
-                <td colSpan={2} className="px-4 py-8 text-center text-muted-foreground">
+                <td colSpan={3} className="px-4 py-8 text-center text-muted-foreground">
                   No attendance yet.
                 </td>
               </tr>
